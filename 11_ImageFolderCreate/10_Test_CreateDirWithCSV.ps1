@@ -1,7 +1,7 @@
 # 2018/08/09 ファイルを開始日から終了日まで複数コピーする
 
 # -----設定部分-----
-$CONFIG_IMAGEROOT_PATH    = "C:\Users\user1\01_Work\13_振り分けツール作成\00_Test\01_SourceImage"
+$CONFIG_IMAGEROOT_PATH    = "C:\Users\user1\01_Work\13_RebuildDirecotry\00_Test\01_SourceImage"
 $CONFIG_SOURCE_IMAGE_PATH = Join-Path $PSScriptRoot "00.jpg"
 $CONFIG_CURRENT_PATH      = $PSScriptRoot
 # テスト用イメージフォルダ作成する際にバッチ番号毎に作成するかどうかのフラグ 1: 作成する 0: 作成しない

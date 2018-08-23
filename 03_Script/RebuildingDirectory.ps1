@@ -5,18 +5,17 @@
 #
 
 #テスト用コード
-Write-Output ("debug00:DebugStart")
+# Write-Output ("debug00:DebugStart")
 
 
 # -----設定部分-----
-$CONFIG_IMAGESOURCE_PATH = "C:\Users\user1\01_Work\13_振り分けツール作成\00_Test\01_SourceImage"
-$CONFIG_IMAGDEST_PATH = "C:\Users\user1\01_Work\13_振り分けツール作成\00_Test\02_MovedImage"
+$CONFIG_IMAGESOURCE_PATH = "C:\Users\user1\01_Work\13_RebuildDirecotry\00_Test\01_SourceImage"
+$CONFIG_IMAGDEST_PATH = "C:\Users\user1\01_Work\13_RebuildDirecotry\00_Test\02_MovedImage"
 $CONFIG_CURRENT_PATH = $PSScriptRoot
 
 # 取込元のイメージフォルダの構成がYYYYMMDDの場合は0 YYYYMMDD\バッチ番号の場合1を設定する
 $CONFIG_FLG_HAS_BAT_SUBDIR  = 0 
 
-Write-Output ("debug01:" + $CONFIG_CURRENT_PATH)
 
 # 現在の実行ファイルの直下のサブディレクトリを取得して、再構築処理を実行
 $CsvFiles = Get-ChildItem -Path $CONFIG_CURRENT_PATH  -Recurse  -Filter *.csv | Select-Object -ExpandProperty FullName 
@@ -25,13 +24,18 @@ $CsvFiles = Get-ChildItem -Path $CONFIG_CURRENT_PATH  -Recurse  -Filter *.csv | 
 # $ImageFiles = Get-ChildItem -Path $CONFIG_IMAGESOURCE_PATH -Recurse  -Filter *.jpg | Select-Object -ExpandProperty FullName
 
 
+# 移動完了数のカウンター
+# $script:CntMoved = 0
+$CntMoved = 0
+
 # -----処理部分-----
 # フォルダ再構築処理本体関数
 function remakingDirectory($csvFileFullName)
 {
 
     try{
-        Write-Output ("csvFileFullName: " + $csvFileFullName)
+
+        # Write-Output ("csvFileFullName: " + $csvFileFullName)
 
         # 0.一行のデータを取得する
         $CsvDataArray = Import-Csv $csvFileFullName -Encoding Default | Select-Object "スキャナ読取日","バッチ番号","委託者コード","イメージファイル名"
@@ -42,7 +46,7 @@ function remakingDirectory($csvFileFullName)
         {
 
 
-            Write-Output ("CsvData: " + $CsvData)
+            # Write-Output ("CsvData: " + $CsvData)
 
             # 1.移動元イメージフォルダを取得する。
             # 処理①：YYYYMMDDサブフォルダ名を取得する。(スキャナ読取り日がこれに該当)
@@ -77,7 +81,7 @@ function remakingDirectory($csvFileFullName)
             # 処理①：委託者コードを取得する
             $ConsignorCode = $CsvData."委託者コード"
 
-            Write-Output ("委託者コード:" + $ConsignorCode)
+            # Write-Output ("委託者コード:" + $ConsignorCode)
 
             # 処理②：イメージファイル名からYYYYMM形式の年月を取得する委託者コード
             $YearMonth = $ImagePathSub01.Substring(0,4)
@@ -95,8 +99,9 @@ function remakingDirectory($csvFileFullName)
             }
 
             # 3.移動元から移動先へファイルを移動する。
-            Move-Item $ImageFileNameFullPath  $DestFullPath
-
+            Move-Item $ImageFileNameFullPath  $DestFullPath -force
+            $script:CntMoved += 1
+            Write-Output ("移動完了:" + $ImageFileNameFullPath + " カウント数：" + $CntMoved)
             # 4.正常終了
 
         }
@@ -117,7 +122,13 @@ function main
 {
 
     Write-Output "-----フォルダ構成の再構築を開始しています-----"
-    $hasError = 0
+
+    Write-Output ("実行パス:" + $CONFIG_CURRENT_PATH)
+    Write-Output ("移動元ルートディレクトリ：" + $CONFIG_IMAGESOURCE_PATH)
+    Write-Output ("移動先ルートディレクトリ：" + $CONFIG_IMAGDEST_PATH)
+    Write-Output "----------------------------------------------"
+    # 開始時刻を保存
+    [DateTime]$dateTime = (Get-Date)
 
     # 実行
     foreach($fileObj in $CsvFiles)
@@ -126,7 +137,11 @@ function main
         remakingDirectory $fileObj 
     }
 
-    Write-Output "-----フォルダ構成の再構築が終了しました-----"
+
+    Write-Output "----------------------------------------------"
+    Write-Output (" 移動ファイル数：" + $CntMoved)
+    Write-Output (" 経過時間(分)：" + (New-TimeSpan $dateTime (Get-Date)).TotalMinutes)
+    Write-Output "-----フォルダ構成の再構築が終了しました(Enterキーで終了します)-----"
 }
 
 
